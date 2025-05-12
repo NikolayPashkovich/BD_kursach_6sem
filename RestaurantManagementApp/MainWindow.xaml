@@ -1,0 +1,550 @@
+﻿<Window x:Class="RestaurantManagementApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RestaurantManagementApp"
+        mc:Ignorable="d"
+        xmlns:converters="clr-namespace:RestaurantManagementApp.Converters"
+        Title="Plaza | Управление Рестораном" Height="500" Width="1200" Background="#FAFAFA" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <converters:CommaSeparatedListConverter x:Key="CommaSeparatedListConverter"/>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ResetButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                            CornerRadius="5"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Стиль для TabControl -->
+        <Style TargetType="TabControl">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+        
+        <Style TargetType="ScrollBar">
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=ScrollViewer.ScrollableHeight}" />
+            <Setter Property="ViewportSize" Value="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=ActualHeight}" />
+        </Style>
+        <!-- Стиль для DataGrid -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#F5F5F5"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="ColumnHeaderHeight" Value="35"/>
+            <Setter Property="RowHeight" Value="40"/>
+        </Style>
+        
+            <!--<local:PromotionToStringConverter x:Key="PromotionToStringConverter"/>-->
+    </Window.Resources>
+
+    <Grid>
+        <TabControl SelectionChanged="TabControl_SelectionChanged">
+            <TabItem x:Name="OrdersTab" Header="🧾 Заказы" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddOrder" Margin="5"/>
+                        <Button Content="Изменить" Click="EditOrder" Margin="5"/>
+                        <Button Content="Удалить" Click="DeleteOrder" Margin="5"/>
+                        <Button Content="Оценка" Click="ManageReview" Margin="5"/>
+                        <Button x:Name="ToggleFilterButton" Content="Фильтры ⬇" Click="ToggleFilterPanel" Margin="5"/>
+                        <Button x:Name="ExportToPdfButton" Content="📄 Сохранить в PDF" Click="ExportOrdersToPdf" Margin="2" Width="120"/>
+
+                    </StackPanel>
+
+                    <!-- Панель с фильтрами -->
+                    <StackPanel x:Name="FilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Rows="3" Margin="10">
+                            <TextBox x:Name="CustomerFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по клиенту" Height="30"/>
+                            <TextBox x:Name="StaffFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по сотруднику" Height="30"/>
+                            <TextBox x:Name="TableFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по столу" Height="30"/>
+                            <!-- Новый диапазон дат -->
+                            <StackPanel Margin="2,-8,2,2">
+                                <TextBlock Text="Дата с:" FontSize="8"/>
+                                <DatePicker x:Name="OrderDateFromPicker" SelectedDateChanged="FilterChanged" Height="30"/>
+                            </StackPanel>
+                            <StackPanel Margin="2,-5,2,2">
+                                <TextBlock Text="Дата по:" FontSize="8"/>
+                                <DatePicker x:Name="OrderDateToPicker" SelectedDateChanged="FilterChanged" Height="30"/>
+                            </StackPanel>
+                            <TextBox x:Name="AmountFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по сумме (напр. >100)" Height="30"/>
+                            <TextBox x:Name="StatusFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по статусу" Height="30"/>
+
+                            <TextBox x:Name="OrderDishesFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по блюдам (например, Борщ)" Height="30"/>
+                            <TextBox x:Name="RatingFilterBox" TextChanged="FilterChanged" Margin="2" ToolTip="Фильтр по оценке (напр. 4 или >3)" Height="30"/>
+
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <DataGrid x:Name="OrdersGrid"
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  IsReadOnly="True"
+                  RowHeight="40"
+                  CanUserAddRows="False"
+                  VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" UseLayoutRounding="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Клиент" Binding="{Binding CustomerName}" Width="*"/>
+                            <DataGridTextColumn Header="Сотрудник" Binding="{Binding StaffName}" Width="*"/>
+                            <DataGridTextColumn Header="Стол" Binding="{Binding TableNumber}" Width="*"/>
+                            <DataGridTextColumn Header="Дата и время" Binding="{Binding OrderDateTime}" Width="*"/>
+                            <DataGridTextColumn Header="Сумма" Binding="{Binding TotalAmount}" Width="*"/>
+                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
+                            <DataGridTemplateColumn Header="Блюда" Width="*" MinWidth="150" MaxWidth="300">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <TextBlock Text="{Binding DishNames, Converter={StaticResource CommaSeparatedListConverter}}"
+                                       TextWrapping="Wrap" MaxWidth="300" />
+                                        </ScrollViewer>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Оценка" Binding="{Binding Rating}" Width="55" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- Вкладка Клиенты -->
+            <TabItem x:Name="ClientsTab" Header="👥 Клиенты" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                            <Button Content="Добавить" Click="AddClient" Margin="5,5,5,5"/>
+                            <Button Content="Изменить" Click="EditClient"/>
+                            <Button Content="Удалить" Click="DeleteClient"/>
+                            <Button x:Name="ToggleClientFilterButton" Content="Фильтры ⬇" Click="ToggleClientFilterPanel" Margin="5"/>
+
+                    </StackPanel>
+                    <StackPanel x:Name="ClientFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="FirstNameFilterBox" TextChanged="FilterCustomers" Margin="2" ToolTip="Фильтр по имени" Height="30"/>
+                            <TextBox x:Name="LastNameFilterBox" TextChanged="FilterCustomers" Margin="2" ToolTip="Фильтр по фамилии" Height="30"/>
+                            <TextBox x:Name="PhoneFilterBox" TextChanged="FilterCustomers" Margin="2" ToolTip="Фильтр по телефону" Height="30"/>
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearCustomerFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+                    <DataGrid x:Name="ClientsGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Имя" Binding="{Binding FirstName}" Width="*"/>
+                            <DataGridTextColumn Header="Фамилия" Binding="{Binding LastName}" Width="*"/>
+                            <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- Вкладка Блюда -->
+            <TabItem x:Name ="DishTab" Header="🍽 Блюда" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddDish"/>
+                        <Button Content="Изменить" Click="EditDish"/>
+                        <Button Content="Удалить" Click="DeleteDish"/>
+                        <Button x:Name="ToggleDishFilterButton" Content="Фильтры ⬇" Click="ToggleDishFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="DishFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="DishNameFilterBox" TextChanged="DishFilterChanged" Margin="2" ToolTip="Фильтр по названию" Height="30"/>
+                            <TextBox x:Name="DishPriceFilterBox" TextChanged="DishFilterChanged" Margin="2" ToolTip="Фильтр по цене (напр. >200)" Height="30"/>
+                            <TextBox x:Name="DishCategoryFilterBox" TextChanged="DishFilterChanged" Margin="2" ToolTip="Фильтр по категории" Height="30"/>
+                            <ComboBox x:Name="DishAvailabilityFilterBox" SelectionChanged="DishFilterChanged" Margin="2" ToolTip="Фильтр по наличию" Height="30">
+                                <ComboBoxItem Content="Все" IsSelected="True"/>
+                                <ComboBoxItem Content="Только активные"/>
+                                <ComboBoxItem Content="Только скрытые"/>
+                            </ComboBox>
+                        </UniformGrid>
+
+                        <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearDishFilters" Height="30"/>
+                    </StackPanel>
+                    <DataGrid x:Name="DishesGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding DishName}" Width="*"/>
+                            <DataGridTextColumn Header="Цена" Binding="{Binding Price}" Width="*"/>
+                            <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="В наличии" Binding="{Binding IsActive}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                 </DockPanel>
+            </TabItem>
+            
+            <TabItem x:Name = "StaffTab" Header="👨‍🍳 Персонал" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddStaff"/>
+                        <Button Content="Изменить" Click="EditStaff"/>
+                        <Button Content="Удалить" Click="DeleteStaff"/>
+                        <Button x:Name="ToggleStaffFilterButton" Content="Фильтры ⬇" Click="ToggleStaffFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="StaffFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="StaffFirstNameFilterBox" TextChanged="FilterStaff" Margin="2" ToolTip="Фильтр по имени" Height="30"/>
+                            <TextBox x:Name="StaffLastNameFilterBox" TextChanged="FilterStaff" Margin="2" ToolTip="Фильтр по фамилии" Height="30"/>
+                            <TextBox x:Name="StaffPositionFilterBox" TextChanged="FilterStaff" Margin="2" ToolTip="Фильтр по должности" Height="30"/>
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearStaffFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+                    <DataGrid x:Name="StaffGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Имя" Binding="{Binding FirstName}" Width="*"/>
+                            <DataGridTextColumn Header="Фамилия" Binding="{Binding LastName}" Width="*"/>
+                            <DataGridTextColumn Header="Должность" Binding="{Binding Position}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- Вкладка Рецепты -->
+            <TabItem x:Name ="DishIngridientsTab" Header="🍽 Рецепты" FontWeight="Bold">
+                <DockPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddDishIngredient"/>
+                        <Button Content="Изменить" Click="EditDishIngredient"/>
+                        <Button Content="Удалить" Click="DeleteDishIngredient"/>
+                        <Button x:Name="ToggleRecipeFilterButton" Content="Фильтры ⬇" Click="ToggleRecipeFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="RecipeFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="RecipeDishFilterBox" TextChanged="RecipeFilterChanged" Margin="2" ToolTip="Фильтр по блюду" Height="30"/>
+                            <TextBox x:Name="RecipeIngredientFilterBox" TextChanged="RecipeFilterChanged" Margin="2" ToolTip="Фильтр по ингредиенту" Height="30"/>
+                            <TextBox x:Name="RecipeQuantityFilterBox" TextChanged="RecipeFilterChanged" Margin="2" ToolTip="Фильтр по количеству (напр. >100)" Height="30"/>
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearRecipeFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <DataGrid x:Name="DishIngridientsGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Блюдо" Binding="{Binding Dish.DishName}" Width="*"/>
+                            <DataGridTextColumn Header="Ингредиент" Binding="{Binding Ingredient.IngredientName}" Width="*"/>
+                            <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+
+            <TabItem x:Name ="IngredientsTab" Header="🧂 Ингредиенты" FontWeight="Bold">
+                <DockPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddIngredient"/>
+                        <Button Content="Изменить" Click="EditIngredient"/>
+                        <Button Content="Удалить" Click="DeleteIngredient"/>
+                        <Button x:Name="ToggleIngredientFilterButton" Content="Фильтры ⬇" Click="ToggleIngredientFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="IngredientFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="IngredientNameFilterBox" TextChanged="IngredientFilterChanged" Margin="2" ToolTip="Фильтр по названию" Height="30"/>
+                            <TextBox x:Name="UnitFilterBox" TextChanged="IngredientFilterChanged" Margin="2" ToolTip="Фильтр по единице" Height="30"/>
+                            <TextBox x:Name="StockFilterBox" TextChanged="IngredientFilterChanged" Margin="2" ToolTip="Фильтр по остатку (например >10)" Height="30"/>
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearIngredientFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <DataGrid x:Name="IngredientsGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding IngredientName}" Width="*"/>
+                            <DataGridTextColumn Header="Единица" Binding="{Binding Unit}" Width="*"/>
+                            <DataGridTextColumn Header="Остаток" Binding="{Binding CurrentStock}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name ="MenuTab" Header="📋 Меню" FontWeight="Bold">
+                <DockPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddMenu"/>
+                        <Button Content="Изменить" Click="EditMenu"/>
+                        <Button Content="Удалить" Click="DeleteMenu"/>
+                        <Button Content="Изменить блюда" Click="EditMenuDishes" Margin="5" Width="150"/>
+                        <Button x:Name="ToggleMenuFilterButton" Content="Фильтры ⬇" Click="ToggleMenuFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="MenuFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="MenuNameFilterBox" TextChanged="MenuFilterChanged" Margin="2" ToolTip="Фильтр по названию меню" Height="30"/>
+
+                            <StackPanel Margin="2,-7,2,2">
+                                <TextBlock Text="Дата с:" FontSize="8"/>
+                                <DatePicker x:Name="StartDateFromPicker" SelectedDateChanged="MenuFilterChanged" Height="30"/>
+                            </StackPanel>
+                            <StackPanel Margin="2,-7,2,2">
+                                <TextBlock Text="Дата по:" FontSize="8"/>
+                                <DatePicker x:Name="StartDateToPicker" SelectedDateChanged="MenuFilterChanged" Height="30"/>
+                            </StackPanel>
+
+                            <TextBox x:Name="DishesFilterBox" TextChanged="MenuFilterChanged" Margin="2,2,2,2" ToolTip="Фильтр по блюдам (например, Салат)" Height="30"/>
+                        </UniformGrid>
+
+                        <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearMenuFilters"  Height="30"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="MenuGrid" AutoGenerateColumns="False" IsReadOnly="True" RowHeight="40">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding MenuName}" Width="*"/>
+                            <DataGridTextColumn Header="Дата начала" Binding="{Binding StartDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
+                            <DataGridTemplateColumn Header="Блюда" Width="*" MinWidth="150" MaxWidth="300">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <TextBlock Text="{Binding DishNames, Converter={StaticResource CommaSeparatedListConverter}}"
+                           TextWrapping="Wrap" MaxWidth="300" />
+                                        </ScrollViewer>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+
+            <TabItem x:Name ="PromotionTab" Header="🎁 Акции" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddPromotion"/>
+                        <Button Content="Изменить" Click="EditPromotion"/>
+                        <Button Content="Удалить" Click="DeletePromotion"/>
+                        <Button Content="Выбрать блюда" Click="EditPromotionDishes" Margin="5" Width="150"/>
+                        <Button Content="Фильтры ⬇" Click="TogglePromotionFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="PromotionFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top" Margin="10,0">
+                        <UniformGrid Columns="4" Rows="2" Margin="10">
+                            <TextBox x:Name="PromotionNameFilterBox" TextChanged="PromotionFilterChanged" Margin="2" ToolTip="Поиск по названию акции" Height="30"/>
+                            <TextBox x:Name="DiscountFilterBox" TextChanged="PromotionFilterChanged" Margin="2" ToolTip="Фильтр по скидке (например >10)" Height="30"/>
+                            <TextBox x:Name="PromotionDishFilterBox" TextChanged="PromotionFilterChanged" Margin="2" ToolTip="Поиск по блюдам" Height="30"/>
+                            <StackPanel Margin="2,-4,2,2">
+                                <TextBlock Text="Период с:" FontSize="11"/>
+                                <DatePicker x:Name="PromotionDateFromPicker" SelectedDateChanged="PromotionFilterChanged" Height="30"/>
+                            </StackPanel>
+                            <StackPanel Margin="2">
+                                <TextBlock Text="по:" FontSize="11"/>
+                                <DatePicker x:Name="PromotionDateToPicker" SelectedDateChanged="PromotionFilterChanged" Height="30"/>
+                            </StackPanel>
+
+                            <!-- Только активные -->
+                            <CheckBox x:Name="ActiveTodayCheckBox" Content="Только активные на сегодня" Margin="2" VerticalAlignment="Center"
+                                 Checked="PromotionFilterChanged" Unchecked="PromotionFilterChanged"/>
+
+                            <!-- Сброс -->
+                            <Button Content="Сбросить фильтры"  Style="{StaticResource ResetButtonStyle}" Click="ClearPromotionFilters" Height="30" />
+                        </UniformGrid>
+                    </StackPanel>
+                    <DataGrid x:Name="PromotionsGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding PromotionName}" Width="*"/>
+                            <DataGridTextColumn Header="Скидка (%)" Binding="{Binding DiscountPercent}" Width="*"/>
+                            <DataGridTemplateColumn Header="Срок действия" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0:dd.MM.yyyy} - {1:dd.MM.yyyy}">
+                                                    <Binding Path="StartDate"/>
+                                                    <Binding Path="EndDate"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Блюда" Width="*" MinWidth="150" MaxWidth="300">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <TextBlock Text="{Binding DishNames, Converter={StaticResource CommaSeparatedListConverter}}"
+                                                TextWrapping="Wrap" MaxWidth="300" />
+                                        </ScrollViewer>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name ="SuppliersTab" Header="🚚 Поставщики" FontWeight="Bold">
+                <DockPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddSupplier"/>
+                        <Button Content="Изменить" Click="EditSupplier"/>
+                        <Button Content="Удалить" Click="DeleteSupplier"/>
+                        <Button x:Name="ToggleSupplierFilterButton" Content="Фильтры ⬇" Click="ToggleSupplierFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <!-- Панель фильтрации -->
+                    <StackPanel x:Name="SupplierFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top" Margin="10,0">
+                        <UniformGrid Columns="3" Margin="10">
+                            <TextBox x:Name="SupplierNameFilterBox" TextChanged="SupplierFilterChanged" Margin="2" ToolTip="Фильтр по названию" Height="30"/>
+                            <TextBox x:Name="SupplierPhoneFilterBox" TextChanged="SupplierFilterChanged" Margin="2" ToolTip="Фильтр по телефону" Height="30"/>
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearSupplierFilters" Height="30"/>
+                        </UniformGrid>
+                    </StackPanel>
+                    <DataGrid x:Name="SuppliersGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding SupplierName}" Width="*"/>
+                            <DataGridTextColumn Header="Телефон" Binding="{Binding ContactPhone}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name ="SuplyTab" Header="📦 Поставки" FontWeight="Bold">
+                <DockPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddSupply"/>
+                        <Button Content="Изменить" Click="EditSupply"/>
+                        <Button Content="Удалить" Click="DeleteSupply"/>
+                        <Button x:Name="ToggleSupplyFilterButton" Content="Фильтры ⬇" Click="ToggleSupplyFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <!-- Панель фильтрации -->
+                    <StackPanel x:Name="SupplyFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top" Margin="10,0">
+                        <UniformGrid Columns="5" Margin="10">
+                            <TextBox x:Name="SupplierFilterBox" TextChanged="SupplyFilterChanged" Margin="2" ToolTip="Фильтр по поставщику" Height="30"/>
+                            <TextBox x:Name="IngredientFilterBox" TextChanged="SupplyFilterChanged" Margin="2" ToolTip="Фильтр по ингредиенту" Height="30"/>
+                            <TextBox x:Name="QuantityFilterBox" TextChanged="SupplyFilterChanged" Margin="2" ToolTip="Фильтр по количеству (например, >5)" Height="30"/>
+                            <StackPanel Margin="2,-8,2,2">
+                                <TextBlock Text="Период с:" FontSize="8"/>
+                                <DatePicker x:Name="SupplyDateFromPicker" SelectedDateChanged="SupplyFilterChanged" Height="30"/>
+                            </StackPanel>
+                            <StackPanel Margin="2,-8,2,2">
+                                <TextBlock Text="по:" FontSize="8"/>
+                                <DatePicker x:Name="SupplyDateToPicker" SelectedDateChanged="SupplyFilterChanged" Height="30"/>
+                            </StackPanel>
+
+                        </UniformGrid>
+                        <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearSupplyFilters" Height="30" />
+                    </StackPanel>
+                    <DataGrid x:Name="SuppliesGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Поставщик" Binding="{Binding Supplier.SupplierName}" Width="*"/>
+                            <DataGridTextColumn Header="Ингредиент" Binding="{Binding Ingredient.IngredientName}" Width="*"/>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding SupplyDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
+                            <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name ="TableTab" Header="🥂 Столы" FontWeight="Bold">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,10,0,0" DockPanel.Dock="Top">
+                        <Button Content="Добавить" Click="AddTable"/>
+                        <Button Content="Изменить" Click="EditTable"/>
+                        <Button Content="Удалить" Click="DeleteTable"/>
+                        <Button x:Name="ToggleTableFilterButton" Content="Фильтры ⬇" Click="ToggleTableFilterPanel" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel x:Name="TableFilterPanel" Visibility="Collapsed" DockPanel.Dock="Top" Margin="10,0">
+                        <UniformGrid Columns="4" Margin="10">
+                            <TextBox x:Name="TableNumberFilterBox" TextChanged="TableFilterChanged" Margin="2" ToolTip="Фильтр по номеру стола" Height="30"/>
+                            <TextBox x:Name="TableCapacityFilterBox" TextChanged="TableFilterChanged" Margin="2" ToolTip="Фильтр по вместимости (например, ≥4)" Height="30"/>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2">
+                                <CheckBox x:Name="OnlyAvailableTablesCheckBox" Content="Только свободные" Checked="TableFilterChanged" Unchecked="TableFilterChanged" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Content="Сбросить фильтры" Style="{StaticResource ResetButtonStyle}" Click="ClearTableFilters" Height="30" Margin="2"/>
+                        </UniformGrid>
+                    </StackPanel>
+                    <DataGrid x:Name="TablesGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                              SelectionMode="Single"
+                                SelectionUnit="FullRow"
+                                RowHeight="40"
+                                CanUserAddRows="False"
+                                VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Номер" Binding="{Binding TableNumber}" Width="*"/>
+                            <DataGridTextColumn Header="Вместимость" Binding="{Binding Capacity}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="Свободен" Binding="{Binding IsAvailable}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

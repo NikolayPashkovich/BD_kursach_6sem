@@ -1,0 +1,65 @@
+﻿<Window x:Class="RestaurantManagementApp.windows.AddEditDishWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RestaurantManagementApp.windows"
+        mc:Ignorable="d"
+        Title="Блюдо" Height="200" Width="400">
+    <Window.Resources>
+        <!-- Можно переиспользовать те же стили кнопок, если требуется -->
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                 CornerRadius="5"
+                 BorderBrush="{TemplateBinding BorderBrush}"
+                 BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Label Content="Название:" Grid.Row="0"/>
+        <TextBox x:Name="DishNameBox" Grid.Row="0" Margin="100,0,0,5"/>
+
+        <Label Content="Цена:" Grid.Row="1"/>
+        <TextBox x:Name="PriceBox" Grid.Row="1" Margin="100,0,0,5"/>
+
+        <Label Content="Категория:" Grid.Row="2"/>
+        <ComboBox x:Name="CategoryBox" Grid.Row="2" Margin="100,0,0,5">
+            <ComboBoxItem Content="Салат"/>
+            <ComboBoxItem Content="Горячее"/>
+            <ComboBoxItem Content="Десерт"/>
+            <ComboBoxItem Content="Напиток"/>
+        </ComboBox>
+
+        <CheckBox x:Name="IsActiveBox" Grid.Row="3" Content="Доступно для заказа" Margin="100,0,0,5"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Сохранить" Click="Save_Click" Margin="5"/>
+            <Button Content="Отмена" Click="Cancel_Click" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,20 @@
+﻿RestaurantManagementApp
+1.0.0.0
+
+winexe
+C#
+.cs
+D:\лабы и дз\6СЕМ\BD_kursach\RestaurantManagementApp\RestaurantManagementApp\obj\Debug\net8.0-windows\
+RestaurantManagementApp
+none
+false
+TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+D:\лабы и дз\6СЕМ\BD_kursach\RestaurantManagementApp\RestaurantManagementApp\App.xaml
+172023151087
+
+511389373169
+245-1664260198
+MainWindow.xaml;windows\AddEditCustomerWindow.xaml;windows\AddEditDishIngredientWindow.xaml;windows\AddEditDishWindow.xaml;windows\AddEditIngredientWindow.xaml;windows\AddEditMenuWindow.xaml;windows\AddEditStaffWindow.xaml;windows\AddOrderDetailWindow.xaml;windows\AddOrderWindow.xaml;windows\DishSelectWindow.xaml;windows\EditMenuDishesWindow.xaml;windows\EditPromotionDishesWindow.xaml;windows\PromotionWindow.xaml;windows\ReviewWindow.xaml;windows\SupplierWindow.xaml;windows\SupplyWindow.xaml;windows\TableWindow.xaml;
+
+False
+
